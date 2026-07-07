@@ -1,0 +1,687 @@
+# ☁️ CF Monitor Pro V3.0
+
+## Cloudflare Workers & Pages 多账号请求监控中心
+
+基于 **Cloudflare Workers + D1 Database + Telegram Bot API** 构建的轻量级边缘监控系统。
+
+无需服务器，无需额外后端，通过 Cloudflare Edge Runtime 自动完成：
+
+* Cloudflare 多账号请求统计
+* Workers / Pages 流量监控
+* 请求趋势分析
+* 配额风险预测
+* Telegram 自动告警
+* 每日报表推送
+* 高并发异常检测
+
+所有数据均存储于用户自己的 Cloudflare D1 数据库。
+
+你的数据、账号信息、API Token、管理密码均由自己掌控。
+
+---
+
+# ✨ 核心功能
+
+## 📊 1. Cloudflare 请求数据大盘
+
+提供完整可视化监控：
+
+### 全局数据
+
+* 当前请求总量
+* 总额度
+* 剩余额度
+* 活跃请求源数量
+* 风险状态
+
+### 单账号数据
+
+支持多个 Cloudflare Account：
+
+* 自定义节点名称
+* Account ID
+* API Token
+* 请求额度限制
+* 分组管理
+* 备注信息
+
+每个节点独立展示：
+
+* 今日请求量
+* 使用比例
+* 剩余额度
+* 昨日统计
+* 月度累计
+* 预计耗尽时间
+
+---
+
+# 📈 2. 请求趋势分析
+
+支持：
+
+## 今日 24 小时
+
+实时查看：
+
+* 每小时请求变化
+* 单节点流量趋势
+* 集群总请求走势
+
+## 昨日 24 小时
+
+用于分析：
+
+* 昨日业务峰值
+* 请求高峰时间
+* 流量变化趋势
+
+## 月度统计
+
+用于：
+
+* 长周期流量分析
+* 节点使用情况
+* 业务增长判断
+
+---
+
+# 🔐 3. D1 数据库存储安全系统
+
+本项目采用 Cloudflare D1 作为唯一数据存储。
+
+数据库保存：
+
+```
+config
+│
+├── 管理密码
+├── Telegram 配置
+└── Cron 配置
+
+
+accounts
+│
+├── Cloudflare Account ID
+├── API Token
+├── 节点名称
+└── 请求额度
+
+
+history
+│
+└── 所有请求历史
+
+
+alerts_log
+│
+└── 告警记录
+
+
+cron_log
+│
+└── 定时任务执行记录
+```
+
+所有配置不会存储在 Worker 环境变量中。
+
+---
+
+# 🔑 管理密码系统
+
+首次部署默认密码：
+
+```
+admin
+```
+
+首次登录后系统会强制要求修改密码。
+
+密码修改后：
+
+* 原 admin 密码立即失效
+* 新密码保存至 D1
+* 无需重新部署 Worker
+
+---
+
+# 忘记密码怎么办？
+
+登录 Cloudflare Dashboard：
+
+```
+存储与数据库
+
+↓
+
+D1
+
+↓
+
+选择绑定数据库
+
+↓
+
+Console
+```
+
+执行：
+
+```sql
+UPDATE config
+SET value='admin'
+WHERE key='admin_password';
+```
+
+然后：
+
+1. 打开监控页面
+2. 使用：
+
+```
+admin
+```
+
+登录
+
+3. 设置新的管理员密码
+
+---
+
+# 🔔 4. Telegram 风控告警系统
+
+支持 Telegram Bot 自动通知。
+
+包含：
+
+## 额度风险报警
+
+支持：
+
+* 50%
+* 75%
+* 90%
+* 95%
+
+等梯度提醒。
+
+例如：
+
+```
+🔔 额度预警
+
+节点:
+API节点A
+
+当前:
+90000 / 100000
+
+使用率:
+90%
+```
+
+---
+
+## 🚨 瞬时高并发激增报警
+
+实时检测：
+
+短时间请求异常增长。
+
+例如：
+
+```
+🚨 突发流量暴增告警
+
+节点:
+海外API
+
+30分钟新增:
+15000请求
+
+当前累计:
+70000 / 100000
+```
+
+避免：
+
+* API异常调用
+* 流量攻击
+* 配额快速消耗
+
+---
+
+# 📅 5. Telegram 每日报告
+
+支持自动日报。
+
+默认统计：
+
+```
+北京时间
+
+昨日08:00
+
+↓
+
+今日07:59
+```
+
+日报内容：
+
+* 每个节点请求量
+* 使用比例
+* 总请求量
+* 剩余额度
+* 集群整体状态
+
+---
+
+# 🚀 6. Telegram 一键推流简报
+
+后台提供：
+
+```
+🚀 一键推流简报
+```
+
+可以主动发送：
+
+* 节点数量
+* 今日总请求
+* 最大消耗节点
+* 最低消耗节点
+* 平均负载
+
+适用于：
+
+* 群组播报
+* 运维日报
+* 业务展示
+
+---
+
+# 🖥️ 7. Cloudflare 请求源核心控制矩阵
+
+支持后台动态管理：
+
+| 项目         | 功能           |
+| ---------- | ------------ |
+| 自定义别名      | 节点名称         |
+| Account ID | Cloudflare账号 |
+| API Token  | 数据访问密钥       |
+| 请求额度       | 自定义限制        |
+| 分组         | 分类管理         |
+| 备注         | 自定义说明        |
+| 状态         | 开启/关闭        |
+
+无需修改代码即可增加监控节点。
+
+---
+
+# 🚀 部署教程
+
+## 第一步：创建 Worker
+
+进入：
+
+```
+Cloudflare Dashboard
+
+↓
+
+Workers & Pages
+
+↓
+
+Create Worker
+```
+
+复制项目代码。
+
+点击部署。
+
+---
+
+# 第二步：创建 D1 数据库
+
+进入：
+
+```
+Cloudflare Dashboard
+
+↓
+
+存储与数据库
+
+↓
+
+D1 Database
+
+↓
+
+Create Database
+```
+
+例如：
+
+```
+cf-monitor-db
+```
+
+---
+
+# 第三步：绑定 D1
+
+进入 Worker：
+
+```
+Settings
+
+↓
+
+Bindings
+
+↓
+
+D1 Database Bindings
+```
+
+新增：
+
+变量名称：
+
+```
+DB
+```
+
+选择刚才创建的数据库。
+
+---
+
+# 第四步：初始化数据库
+
+进入：
+
+```
+D1
+
+↓
+
+Console
+```
+
+执行：
+
+```sql
+CREATE TABLE IF NOT EXISTS config (
+key TEXT PRIMARY KEY,
+value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS accounts (
+id TEXT PRIMARY KEY,
+name TEXT NOT NULL,
+accountId TEXT NOT NULL,
+apiToken TEXT NOT NULL,
+customLimit INTEGER DEFAULT 100000,
+active INTEGER DEFAULT 1,
+lastChecked INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS history (
+id TEXT PRIMARY KEY,
+accountId TEXT NOT NULL,
+accountName TEXT NOT NULL,
+timestamp INTEGER NOT NULL,
+workersRequests INTEGER NOT NULL,
+pagesRequests INTEGER NOT NULL,
+totalRequests INTEGER NOT NULL,
+limitRequests INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cron_log (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+timestamp INTEGER,
+status TEXT,
+message TEXT,
+totalRequests INTEGER,
+executionTimeMs INTEGER
+);
+```
+
+---
+
+# 第五步：配置 Cron Trigger
+
+进入：
+
+```
+Worker
+
+↓
+
+Triggers
+
+↓
+
+Cron Triggers
+```
+
+添加：
+
+```
+*/5 * * * *
+```
+
+表示：
+
+每 5 分钟自动采集一次。
+
+---
+
+# Account ID 与 API Token 获取方式
+
+## 获取 Account ID
+
+进入 Cloudflare：
+
+```
+Dashboard
+
+↓
+
+选择任意域名
+
+↓
+
+右侧 API 区域
+```
+
+或者：
+
+```
+账户主页
+
+↓
+
+Account ID
+```
+
+复制：
+
+```
+xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+---
+
+# 创建 API Token
+
+进入：
+
+```
+Cloudflare Dashboard
+
+↓
+
+头像
+
+↓
+
+My Profile
+
+↓
+
+API Tokens
+
+↓
+
+Create Token
+```
+
+选择：
+
+```
+Create Custom Token
+```
+
+推荐权限：
+
+```
+Account
+
+Workers Analytics
+
+Read
+```
+
+如果需要 Pages：
+
+增加：
+
+```
+Account
+
+Pages
+
+Read
+```
+
+创建完成后复制：
+
+```
+API Token
+```
+
+注意：
+
+Cloudflare 只显示一次 Token。
+
+丢失后需要重新创建。
+
+---
+
+# Telegram 配置方法
+
+## 创建机器人
+
+打开 Telegram：
+
+搜索：
+
+```
+@BotFather
+```
+
+发送：
+
+```
+/newbot
+```
+
+创建机器人。
+
+获得：
+
+```
+Bot Token
+```
+
+---
+
+## 获取 Chat ID
+
+向机器人发送任意消息。
+
+访问：
+
+```
+https://api.telegram.org/bot你的Token/getUpdates
+```
+
+找到：
+
+```
+chat.id
+```
+
+填写即可。
+
+---
+
+# 感谢
+
+特别感谢以下项目与工具：
+
+## ⭐ 感谢 CM 大佬
+
+本项目基于：
+
+https://github.com/cmliu/CF-Workers-UsagePanel
+
+进行二次修改和功能扩展。
+
+感谢 CM 大佬提供优秀的 Cloudflare Worker 使用量监控项目。
+
+如果本项目帮助到你，请前往原项目：
+
+⭐ 点亮 Star 支持作者。
+
+---
+
+## 🤖 感谢 Gemini
+
+感谢 Gemini 免费版：
+
+* 协助分析 Worker 代码结构
+* 提供代码优化建议
+* 辅助定位问题
+* 逐步完善项目功能
+
+---
+
+## 🧠 感谢 ChatGPT
+
+感谢 ChatGPT 免费版：
+
+* 协助编写项目说明
+* 整理完整部署流程
+* 优化 README 文档结构
+* 辅助项目工程化整理
+
+---
+
+# License
+
+MIT License
+
+欢迎学习、修改和二次开发。
+
+---
+
+如果这个项目对你有帮助：
+
+⭐ Star 项目
+
+📢 分享给更多 Cloudflare 用户
